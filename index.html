@@ -60,15 +60,35 @@
         let namaTerdeteksi = "";
 
         // Fungsi yang berjalan otomatis untuk menyalakan kamera scanner
-        function startScanner() {
+       function startScanner() {
+        // Fungsi dinamis untuk menghitung ukuran kotak QR agar tidak crash di HP kecil
+            let qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+                let minEdgePercentage = 0.7; // 70% dari sisi terkecil
+                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                return {
+                     width: qrboxSize,
+                    height: qrboxSize
+                };
+            }
+
+        // Inisialisasi scanner dengan konfigurasi yang lebih aman
             html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
                 fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                rememberLastUsedCamera: true
+                qrbox: qrboxFunction, // Menggunakan fungsi dinamis di atas
+                rememberLastUsedCamera: true,
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
             });
-            html5QrcodeScanner.render(onScanSuccess);
+    
+        // Jalankan render secara langsung (cara paling stabil untuk web statis)
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
         }
 
+// Tambahkan fungsi kosong ini di bawah startScanner untuk menangkap log jika scan gagal membaca (opsional tapi aman)
+function onScanFailure(error) {
+    // Biarkan kosong agar tidak memenuhi log, 
+    // pustaka akan terus mencoba scan ulang secara otomatis setiap frame
+}
         // Fungsi ketika QR Code berhasil dibaca oleh kamera
         function onScanSuccess(decodedText, decodedResult) {
             // Menghentikan scanner sementara agar tidak scan berkali-kali

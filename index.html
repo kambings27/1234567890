@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart & Mindful Attendance</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md text-center">
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">Presensi Jurnal Kelas</h1>
+        <p class="text-slate-500 text-sm mb-6">Silakan scan QR Code Anda pada kamera di bawah ini.</p>
+
+        <div id="scanner-container" class="overflow-hidden rounded-xl bg-slate-900 border-4 border-slate-200 aspect-square w-full mb-4">
+            <div id="reader" class="w-full h-full"></div>
+        </div>
+
+        <div id="status-message" class="text-sm font-semibold text-amber-600 animate-pulse hidden">
+            Memproses kode...
+        </div>
+
+        <div id="emoji-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all scale-100">
+                <h2 class="text-xl font-bold text-slate-800 mb-1">Selamat Pagi! 👋</h2>
+                <p id="siswa-nama" class="text-2xl font-extrabold text-indigo-600 mb-2">Nama Siswa</p>
+                <p class="text-slate-500 text-sm mb-6">Bagaimana perasaanmu atau kondisimu saat ini?</p>
+                
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button onclick="kirimData('😊 Semangat')" class="flex flex-col items-center p-3 border-2 border-slate-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition active:scale-95">
+                        <span class="text-4xl mb-1">😊</span>
+                        <span class="text-xs font-bold text-slate-700">Semangat</span>
+                    </button>
+                    <button onclick="kirimData('🥱 Lelah/Ngantuk')" class="flex flex-col items-center p-3 border-2 border-slate-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition active:scale-95">
+                        <span class="text-4xl mb-1">🥱</span>
+                        <span class="text-xs font-bold text-slate-700">Lelah/Ngantuk</span>
+                    </button>
+                    <button onclick="kirimData('😟 Cemas/Bingung')" class="flex flex-col items-center p-3 border-2 border-slate-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition active:scale-95">
+                        <span class="text-4xl mb-1">😟</span>
+                        <span class="text-xs font-bold text-slate-700">Cemas/Bingung</span>
+                    </button>
+                    <button onclick="kirimData('😐 Biasa Saja')" class="flex flex-col items-center p-3 border-2 border-slate-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition active:scale-95">
+                        <span class="text-4xl mb-1">😐</span>
+                        <span class="text-xs font-bold text-slate-700">Biasa Saja</span>
+                    </button>
+                </div>
+                <p class="text-slate-400 text-[10px]">Pilihanmu bersifat rahasia dan hanya diketahui oleh gurumu.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === KONFIGURASI ===
+        // GANTI teks di bawah ini dengan URL Web App dari Google Apps Script Anda!
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNPPzRUe8ROEcbK0p3H5jyMrWSpjqHdde-MIYf_SN6jE-AsYIKR314Nbj6vwrFtamV/exec"; 
+
+        let html5QrcodeScanner;
+        let namaTerdeteksi = "";
+
+        // Fungsi yang berjalan otomatis untuk menyalakan kamera scanner
+        function startScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                rememberLastUsedCamera: true
+            });
+            html5QrcodeScanner.render(onScanSuccess);
+        }
+
+        // Fungsi ketika QR Code berhasil dibaca oleh kamera
+        function onScanSuccess(decodedText, decodedResult) {
+            // Menghentikan scanner sementara agar tidak scan berkali-kali
+            html5QrcodeScanner.clear();
+            
+            // Mengambil teks dari isi QR Code (diasumsikan isi QR adalah nama siswa)
+            namaTerdeteksi = decodedText;
+            
+            // Menampilkan nama di modal pop-up emoji
+            document.getElementById("siswa-nama").innerText = namaTerdeteksi;
+            document.getElementById("emoji-modal").classList.remove("hidden");
+        }
+
+        // Fungsi mengirim data ke Google Sheets saat emoji diklik
+        function kirimData(statusEmosi) {
+            document.getElementById("emoji-modal").classList.add("hidden");
+            document.getElementById("status-message").classList.remove("hidden");
+            document.getElementById("status-message").innerText = "Sedang mencatat kehadiran...";
+
+            const payloads = {
+                nama: namaTerdeteksi,
+                emosi: statusEmosi
+            };
+
+            // Mengirim data menggunakan metode POST ke Google Apps Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payloads)
+            })
+            .then(res => res.json())
+            .then(response => {
+                alert("Absen Berhasil! Selamat belajar, " + namaTerdeteksi);
+                resetSistem();
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Gagal mengirim data, namun dicoba atur ulang sistem.");
+                resetSistem();
+            });
+        }
+
+        // Fungsi mengembalikan aplikasi ke mode siap scan untuk siswa selanjutnya
+        function resetSistem() {
+            document.getElementById("status-message").classList.add("hidden");
+            namaTerdeteksi = "";
+            startScanner(); // Menyalakan kembali kamera
+        }
+
+        // Mulai jalankan scanner saat halaman pertama kali dibuka
+        window.onload = startScanner;
+    </script>
+</body>
+</html>

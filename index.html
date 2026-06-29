@@ -25,6 +25,7 @@
             <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all scale-100">
                 <h2 class="text-xl font-bold text-slate-800 mb-1">Selamat Pagi! 👋</h2>
                 <p id="siswa-nama" class="text-2xl font-extrabold text-indigo-600 mb-2">Nama Siswa</p>
+                <p id="absen-jam" class="text-sm font-medium text-slate-600 bg-slate-100 py-1 px-3 rounded-full inline-block mb-3">Tercatat jam: --:--</p>
                 <p class="text-slate-500 text-sm mb-6">Bagaimana perasaanmu atau kondisimu saat ini?</p>
                 
                 <div class="grid grid-cols-2 gap-3 mb-6">
@@ -78,6 +79,7 @@
             
             // Menampilkan nama di modal pop-up emoji
             document.getElementById("siswa-nama").innerText = namaTerdeteksi;
+            document.getElementById("absen-jam").innerText = "Tercatat jam: " + jamMenit + " WIB";
             document.getElementById("emoji-modal").classList.remove("hidden");
         }
 

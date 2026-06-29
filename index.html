@@ -10,7 +10,7 @@
 <body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md text-center">
-        <h1 class="text-2xl font-bold text-slate-800 mb-2">Presensi Informatika</h1>
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">Absensi Informatika</h1>
         <p class="text-slate-500 text-sm mb-6">Silakan scan QR Code Anda pada kamera di bawah ini.</p>
 
         <div id="scanner-container" class="overflow-hidden rounded-xl bg-slate-900 border-4 border-slate-200 aspect-square w-full mb-4">
@@ -25,7 +25,6 @@
             <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all scale-100">
                 <h2 class="text-xl font-bold text-slate-800 mb-1">Selamat Pagi! 👋</h2>
                 <p id="siswa-nama" class="text-2xl font-extrabold text-indigo-600 mb-2">Nama Siswa</p>
-                <p id="absen-jam" class="text-sm font-medium text-slate-600 bg-slate-100 py-1 px-3 rounded-full inline-block mb-3">Tercatat jam: --:--</p>
                 <p class="text-slate-500 text-sm mb-6">Bagaimana perasaanmu atau kondisimu saat ini?</p>
                 
                 <div class="grid grid-cols-2 gap-3 mb-6">
@@ -60,35 +59,15 @@
         let namaTerdeteksi = "";
 
         // Fungsi yang berjalan otomatis untuk menyalakan kamera scanner
-       function startScanner() {
-        // Fungsi dinamis untuk menghitung ukuran kotak QR agar tidak crash di HP kecil
-            let qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
-                let minEdgePercentage = 0.7; // 70% dari sisi terkecil
-                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                return {
-                     width: qrboxSize,
-                    height: qrboxSize
-                };
-            }
-
-        // Inisialisasi scanner dengan konfigurasi yang lebih aman
+        function startScanner() {
             html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
                 fps: 10, 
-                qrbox: qrboxFunction, // Menggunakan fungsi dinamis di atas
-                rememberLastUsedCamera: true,
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                qrbox: { width: 250, height: 250 },
+                rememberLastUsedCamera: true
             });
-    
-        // Jalankan render secara langsung (cara paling stabil untuk web statis)
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            html5QrcodeScanner.render(onScanSuccess);
         }
 
-// Tambahkan fungsi kosong ini di bawah startScanner untuk menangkap log jika scan gagal membaca (opsional tapi aman)
-function onScanFailure(error) {
-    // Biarkan kosong agar tidak memenuhi log, 
-    // pustaka akan terus mencoba scan ulang secara otomatis setiap frame
-}
         // Fungsi ketika QR Code berhasil dibaca oleh kamera
         function onScanSuccess(decodedText, decodedResult) {
             // Menghentikan scanner sementara agar tidak scan berkali-kali
@@ -99,7 +78,6 @@ function onScanFailure(error) {
             
             // Menampilkan nama di modal pop-up emoji
             document.getElementById("siswa-nama").innerText = namaTerdeteksi;
-            document.getElementById("absen-jam").innerText = "Tercatat jam: " + jamMenit + " WIB";
             document.getElementById("emoji-modal").classList.remove("hidden");
         }
 
